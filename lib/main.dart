@@ -88,6 +88,7 @@ class _RummikubHomePageState extends State<RummikubHomePage> {
       swapPlayersTurn();
     } else {
       print('Jogada inválida');
+      addTileToCurrentPlayer();
     }
   }
 
@@ -96,26 +97,21 @@ class _RummikubHomePageState extends State<RummikubHomePage> {
       return false;
     }
 
-    // Verificar se todas as peças selecionadas têm a mesma cor
     Color firstColor = selectedTiles.first.color;
     bool sameColor = selectedTiles.every((tile) => tile.color == firstColor);
 
     if (!sameColor) {
-      // Caso as peças não tenham a mesma cor, pelo menos uma deve ser o coringa (0)
       bool hasWildcard = selectedTiles.any((tile) => tile.number == 0);
       if (!hasWildcard) {
         return false;
       }
     }
 
-    // Ordenar as peças selecionadas por número
     List<int> numbers = selectedTiles.map((tile) => tile.number).toList();
     numbers.sort();
 
-    // Verificar se as peças selecionadas formam uma sequência válida
     for (int i = 1; i < numbers.length; i++) {
       if (numbers[i] != numbers[i - 1] + 1) {
-        // Caso haja uma diferença entre os números adjacentes, pelo menos uma peça deve ser o coringa (0)
         bool hasWildcard = selectedTiles.any((tile) => tile.number == 0);
         if (!hasWildcard) {
           return false;
@@ -148,6 +144,23 @@ class _RummikubHomePageState extends State<RummikubHomePage> {
     });
   }
 
+  void addTileToCurrentPlayer() {
+    if (tiles.isEmpty) {
+      print('Não há mais peças disponíveis para adicionar');
+      return;
+    }
+
+    Tile newTile = tiles.removeLast();
+
+    setState(() {
+      if (player1Turn) {
+        player1Tiles.add(newTile);
+      } else {
+        player2Tiles.add(newTile);
+      }
+    });
+  }
+
   void restartGame() {
     tiles.addAll(player1Tiles);
     tiles.addAll(player2Tiles);
@@ -162,7 +175,7 @@ class _RummikubHomePageState extends State<RummikubHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Rummikub3'),
+        title: Text('Rummikub'),
       ),
       body: Center(
         child: Column(
@@ -175,8 +188,8 @@ class _RummikubHomePageState extends State<RummikubHomePage> {
             ),
             SizedBox(height: 16),
             Wrap(
-              spacing: 8.0, // Espaçamento horizontal entre as peças
-              runSpacing: 8.0, // Espaçamento vertical entre as peças
+              spacing: 8.0,
+              runSpacing: 8.0,
               children: selectedTiles.map((tile) {
                 return Container(
                   decoration: BoxDecoration(
@@ -187,8 +200,8 @@ class _RummikubHomePageState extends State<RummikubHomePage> {
                     ),
                     borderRadius: BorderRadius.circular(10.0),
                   ),
-                  width: 50, // Largura da peça
-                  height: 50, // Altura da peça
+                  width: 50,
+                  height: 50,
                   child: Center(
                     child: Text(
                       tile.number.toString(),
