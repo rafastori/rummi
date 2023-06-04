@@ -120,7 +120,7 @@ class _RummikubHomePageState extends State<RummikubHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Rummikub'),
+        title: Text('Rummikub2'),
       ),
       body: Center(
         child: Column(
