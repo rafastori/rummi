@@ -96,7 +96,33 @@ class _RummikubHomePageState extends State<RummikubHomePage> {
       return false;
     }
 
-    // Implementação simplificada
+    // Verificar se todas as peças selecionadas têm a mesma cor
+    Color firstColor = selectedTiles.first.color;
+    bool sameColor = selectedTiles.every((tile) => tile.color == firstColor);
+
+    if (!sameColor) {
+      // Caso as peças não tenham a mesma cor, pelo menos uma deve ser o coringa (0)
+      bool hasWildcard = selectedTiles.any((tile) => tile.number == 0);
+      if (!hasWildcard) {
+        return false;
+      }
+    }
+
+    // Ordenar as peças selecionadas por número
+    List<int> numbers = selectedTiles.map((tile) => tile.number).toList();
+    numbers.sort();
+
+    // Verificar se as peças selecionadas formam uma sequência válida
+    for (int i = 1; i < numbers.length; i++) {
+      if (numbers[i] != numbers[i - 1] + 1) {
+        // Caso haja uma diferença entre os números adjacentes, pelo menos uma peça deve ser o coringa (0)
+        bool hasWildcard = selectedTiles.any((tile) => tile.number == 0);
+        if (!hasWildcard) {
+          return false;
+        }
+      }
+    }
+
     return true;
   }
 
@@ -136,23 +162,44 @@ class _RummikubHomePageState extends State<RummikubHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Rummikub3'),
+        title: Text('Rummikub'),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text('Jogador Atual: ${player1Turn ? 'Jogador 1' : 'Jogador 2'}'),
-            SizedBox(height: 16),
-            Text(
-                'Peças do Jogador 1: ${player1Tiles.map((tile) => tile.toString()).join(', ')}'),
-            SizedBox(height: 16),
-            Text(
-                'Peças do Jogador 2: ${player2Tiles.map((tile) => tile.toString()).join(', ')}'),
-            SizedBox(height: 16),
             ElevatedButton(
               child: Text('Jogar'),
               onPressed: play,
+            ),
+            SizedBox(height: 16),
+            Wrap(
+              spacing: 8.0, // Espaçamento horizontal entre as peças
+              runSpacing: 8.0, // Espaçamento vertical entre as peças
+              children: selectedTiles.map((tile) {
+                return Container(
+                  decoration: BoxDecoration(
+                    color: tile.color,
+                    border: Border.all(
+                      color: Colors.black,
+                      width: 2.0,
+                    ),
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  width: 50, // Largura da peça
+                  height: 50, // Altura da peça
+                  child: Center(
+                    child: Text(
+                      tile.number.toString(),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18.0,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
             SizedBox(height: 16),
             ElevatedButton(
@@ -162,7 +209,7 @@ class _RummikubHomePageState extends State<RummikubHomePage> {
             SizedBox(height: 16),
             Expanded(
               child: GridView.count(
-                crossAxisCount: 4, // Define o número de colunas desejado
+                crossAxisCount: 4,
                 children: List.generate(
                   (player1Turn ? player1Tiles : player2Tiles).length,
                   (index) {
@@ -170,7 +217,17 @@ class _RummikubHomePageState extends State<RummikubHomePage> {
                         (player1Turn ? player1Tiles : player2Tiles)[index];
                     bool selected = selectedTiles.contains(tile);
                     return Container(
-                      color: tile.color,
+                      decoration: BoxDecoration(
+                        color: tile.color,
+                        border: selected
+                            ? Border.all(
+                                color: Colors.black,
+                                width: 2.0,
+                              )
+                            : null,
+                        borderRadius:
+                            selected ? BorderRadius.circular(10.0) : null,
+                      ),
                       child: ListTile(
                         title: Text(
                           tile.number.toString(),
