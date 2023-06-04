@@ -1,5 +1,17 @@
 import 'package:flutter/material.dart';
 
+class Tile {
+  final int number;
+  final String color;
+
+  Tile(this.number, this.color);
+
+  @override
+  String toString() {
+    return '$number ($color)';
+  }
+}
+
 void main() => runApp(RummikubApp());
 
 class RummikubApp extends StatelessWidget {
@@ -21,81 +33,87 @@ class RummikubHomePage extends StatefulWidget {
 }
 
 class _RummikubHomePageState extends State<RummikubHomePage> {
-  List<int> tiles = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-  List<int> player1Tiles = [];
-  List<int> player2Tiles = [];
+  final List<String> colors = ['preto', 'laranja', 'azul', 'vermelho'];
+  List<Tile> tiles = [];
+  List<Tile> player1Tiles = [];
+  List<Tile> player2Tiles = [];
+  List<Tile> selectedTiles = [];
+  bool player1Turn = true;
 
   @override
   void initState() {
     super.initState();
-    // Distribuir as peças para os jogadores
+    generateTiles();
     distributeTiles();
   }
 
-  void distributeTiles() {
-    // Embaralhar as peças
+  void generateTiles() {
+    for (var color in colors) {
+      for (var i = 1; i <= 13; i++) {
+        tiles.add(Tile(i, color));
+      }
+    }
+    tiles.addAll([
+      Tile(0, 'coringa'),
+      Tile(0, 'coringa')
+    ]); // adicionando as peças coringas
     tiles.shuffle();
+  }
 
-    // Distribuir 10 peças para cada jogador
-    player1Tiles = tiles.sublist(0, 10);
-    player2Tiles = tiles.sublist(0, 10);
+  void distributeTiles() {
+    player1Tiles = tiles.sublist(0, 14);
+    player2Tiles = tiles.sublist(14, 28);
+    tiles = tiles.sublist(28);
   }
 
   void play() {
-    // Exemplo de lógica de jogada:
-
-    // Verificar se a jogada é válida
     if (isValidPlay()) {
-      // Atualizar os jogadores com a jogada
       updatePlayers();
-
-      // Realizar outras ações relacionadas à jogada, como atualizar o tabuleiro, verificar vencedor, etc.
-      // ...
-
-      // Exemplo: Trocar a vez dos jogadores
       swapPlayersTurn();
     } else {
-      // A jogada não é válida, exibir mensagem de erro ou tomar ação apropriada
-      // ...
+      print('Jogada inválida');
     }
   }
 
   bool isValidPlay() {
-    // Obtenha as peças selecionadas pelo jogador
-    List<String> selectedTiles =
-        []; // Substitua pela lógica de obtenção das peças selecionadas
-
-    // Verifique se a quantidade de peças selecionadas é válida
-    if (selectedTiles.length < 3 || selectedTiles.length > 4) {
+    if (selectedTiles.length < 3) {
       return false;
     }
 
-    // Verifique se todas as peças selecionadas são do mesmo número
-    String firstTile = selectedTiles[0];
-    for (int i = 1; i < selectedTiles.length; i++) {
-      if (selectedTiles[i] != firstTile) {
-        return false;
-      }
-    }
-
-    // A jogada é válida se atender a todas as condições
+    // Implementação simplificada
     return true;
   }
 
   void updatePlayers() {
-    // Lógica para atualizar os jogadores após a jogada
-    // ...
+    List<Tile> currentPlayerTiles = player1Turn ? player1Tiles : player2Tiles;
+
+    for (Tile tile in selectedTiles) {
+      currentPlayerTiles.remove(tile);
+    }
+
+    setState(() {
+      if (player1Turn) {
+        player1Tiles = currentPlayerTiles;
+      } else {
+        player2Tiles = currentPlayerTiles;
+      }
+    });
   }
 
   void swapPlayersTurn() {
-    // Lógica para trocar a vez dos jogadores
-    // ...
+    setState(() {
+      player1Turn = !player1Turn;
+    });
   }
 
   void restartGame() {
-    // Reiniciar o jogo
+    tiles.addAll(player1Tiles);
+    tiles.addAll(player2Tiles);
+    generateTiles();
     distributeTiles();
-    setState(() {});
+    setState(() {
+      player1Turn = true;
+    });
   }
 
   @override
@@ -108,11 +126,13 @@ class _RummikubHomePageState extends State<RummikubHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-                'Player 1: ${player1Tiles.map((tile) => tile.toString()).join(', ')}'),
+            Text('Jogador Atual: ${player1Turn ? 'Jogador 1' : 'Jogador 2'}'),
             SizedBox(height: 16),
             Text(
-                'Player 2: ${player2Tiles.map((tile) => tile.toString()).join(', ')}'),
+                'Peças do Jogador 1: ${player1Tiles.map((tile) => tile.toString()).join(', ')}'),
+            SizedBox(height: 16),
+            Text(
+                'Peças do Jogador 2: ${player2Tiles.map((tile) => tile.toString()).join(', ')}'),
             SizedBox(height: 16),
             ElevatedButton(
               child: Text('Jogar'),
@@ -122,6 +142,30 @@ class _RummikubHomePageState extends State<RummikubHomePage> {
             ElevatedButton(
               child: Text('Reiniciar Jogo'),
               onPressed: restartGame,
+            ),
+            SizedBox(height: 16),
+            Expanded(
+              child: ListView.builder(
+                itemCount: (player1Turn ? player1Tiles : player2Tiles).length,
+                itemBuilder: (context, index) {
+                  Tile tile =
+                      (player1Turn ? player1Tiles : player2Tiles)[index];
+                  bool selected = selectedTiles.contains(tile);
+                  return ListTile(
+                    tileColor: selected ? Colors.blue : null,
+                    title: Text(tile.toString()),
+                    onTap: () {
+                      setState(() {
+                        if (selected) {
+                          selectedTiles.remove(tile);
+                        } else {
+                          selectedTiles.add(tile);
+                        }
+                      });
+                    },
+                  );
+                },
+              ),
             ),
           ],
         ),
