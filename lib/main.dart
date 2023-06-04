@@ -2,13 +2,29 @@ import 'package:flutter/material.dart';
 
 class Tile {
   final int number;
-  final String color;
+  final String colorName;
+  final Color color;
 
-  Tile(this.number, this.color);
+  Tile(this.number, this.colorName) : color = getColorFromName(colorName);
+
+  static Color getColorFromName(String colorName) {
+    switch (colorName) {
+      case 'preto':
+        return Colors.black;
+      case 'laranja':
+        return Colors.orange;
+      case 'azul':
+        return Colors.blue;
+      case 'vermelho':
+        return Colors.red;
+      default:
+        return Colors.black;
+    }
+  }
 
   @override
   String toString() {
-    return '$number ($color)';
+    return '$number ($colorName)';
   }
 }
 
@@ -33,7 +49,7 @@ class RummikubHomePage extends StatefulWidget {
 }
 
 class _RummikubHomePageState extends State<RummikubHomePage> {
-  final List<String> colors = ['preto', 'laranja', 'azul', 'vermelho'];
+  final List<String> colorNames = ['preto', 'laranja', 'azul', 'vermelho'];
   List<Tile> tiles = [];
   List<Tile> player1Tiles = [];
   List<Tile> player2Tiles = [];
@@ -48,9 +64,9 @@ class _RummikubHomePageState extends State<RummikubHomePage> {
   }
 
   void generateTiles() {
-    for (var color in colors) {
+    for (var colorName in colorNames) {
       for (var i = 1; i <= 13; i++) {
-        tiles.add(Tile(i, color));
+        tiles.add(Tile(i, colorName));
       }
     }
     tiles.addAll([
@@ -145,26 +161,36 @@ class _RummikubHomePageState extends State<RummikubHomePage> {
             ),
             SizedBox(height: 16),
             Expanded(
-              child: ListView.builder(
-                itemCount: (player1Turn ? player1Tiles : player2Tiles).length,
-                itemBuilder: (context, index) {
-                  Tile tile =
-                      (player1Turn ? player1Tiles : player2Tiles)[index];
-                  bool selected = selectedTiles.contains(tile);
-                  return ListTile(
-                    tileColor: selected ? Colors.blue : null,
-                    title: Text(tile.toString()),
-                    onTap: () {
-                      setState(() {
-                        if (selected) {
-                          selectedTiles.remove(tile);
-                        } else {
-                          selectedTiles.add(tile);
-                        }
-                      });
-                    },
-                  );
-                },
+              child: GridView.count(
+                crossAxisCount: 4, // Define o número de colunas desejado
+                children: List.generate(
+                  (player1Turn ? player1Tiles : player2Tiles).length,
+                  (index) {
+                    Tile tile =
+                        (player1Turn ? player1Tiles : player2Tiles)[index];
+                    bool selected = selectedTiles.contains(tile);
+                    return Container(
+                      color: tile.color,
+                      child: ListTile(
+                        title: Text(
+                          tile.number.toString(),
+                          style: TextStyle(
+                            color: Colors.white,
+                          ),
+                        ),
+                        onTap: () {
+                          setState(() {
+                            if (selected) {
+                              selectedTiles.remove(tile);
+                            } else {
+                              selectedTiles.add(tile);
+                            }
+                          });
+                        },
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ],
